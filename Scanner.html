@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Scanner Barcode Excel</title>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+    <h3>Scan Barcode BY IGSAL</h3>
+
+    <!-- Upload Excel -->
+    <input type="file" id="uploadExcel" accept=".xlsx, .xls">
+    <br><br>
+
+    <div id="reader" style="width:300px;"></div>
+    <div id="result" style="font-weight:bold; margin-top:20px;">Hasil scan akan muncul di sini ©IGSAL </div>
+
+    <script>
+        let dataProduk = {}; // Objek untuk simpan data dari Excel
+
+        // Baca Excel saat upload
+        document.getElementById("uploadExcel").addEventListener("change", function(e) {
+            let file = e.target.files[0];
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, {type: 'array'});
+                let sheetName = workbook.SheetNames[0];
+                let sheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+                sheet.forEach(row => {
+                    // Pastikan kolom di Excel ada 'barcode' dan 'nama'
+                    dataProduk[row.barcode] = row.nama;
+                });
+
+                alert("Data Berhasil DiUpload");
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        function onScanSuccess(decodedText) {
+            let namaProduk = dataProduk[decodedText] || "Produk Tidak Ada DiData";
+            document.getElementById("result").innerText =
+                `Barcode: ${decodedText}\nNama: ${namaProduk}`;
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader", { fps: 10, qrbox: 250 }
+        );
+        html5QrcodeScanner.render(onScanSuccess);
+    </script>
+</body>
+</html>
